@@ -2,15 +2,14 @@
 import {createClient} from 'redis';
 import axios from 'axios';
 import express from 'express';
-import { ChainData, getDeployedSubgraphUri, getSubgraphHealth } from "@connext/nxtp-utils";
-import { appendFile } from 'fs';
+import {getDeployedSubgraphUri, getSubgraphHealth } from "@connext/nxtp-utils";
+
 
 //pull from config
 const REDIS_URL = "127.0.0.1";
 const EXPRESS_PORT = "1234";
 //15 mins in ms. 
 const CACHE_EXPIRY = 1_000 * 60 * 15;
-
 const CHAINS_TO_MONITOR = [1,4,5,42];
 
 interface Healths{
