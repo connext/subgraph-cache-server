@@ -2,7 +2,7 @@
 import {createClient} from 'redis';
 import axios from 'axios';
 import express from 'express';
-import {getDeployedSubgraphUri, getSubgraphHealth } from "@connext/nxtp-utils";
+import {getDeployedSubgraphUri, getSubgraphHealth } from "./manualDeps";
 
 
 //pull from config
@@ -11,6 +11,7 @@ const EXPRESS_PORT = "1234";
 //15 mins in ms. 
 const CACHE_EXPIRY = 1_000 * 60 * 15;
 const CHAINS_TO_MONITOR = [1,4,5,42];
+const TEST = process.env.TEST;
 
 interface Healths{
   [key:number] : string[]
@@ -43,44 +44,44 @@ async  getHealthByUri(uri:string){
 
 }
 //possibly useful
-async  determineBestSubgraphProvider(chainId:number){
-  const uris = getDeployedSubgraphUri(chainId);
-  const health = [];
+// async  determineBestSubgraphProvider(chainId:number){
+//   const uris = getDeployedSubgraphUri(chainId);
+//   const health = [];
 
-  let healthiest: { data: { data: { indexingStatusForCurrentVersion: any; }; }; } | undefined = undefined;
+//   let healthiest: { data: { data: { indexingStatusForCurrentVersion: any; }; }; } | undefined = undefined;
 
-  for(const uri of uris){
-    const res = await this.getHealthByUri(uri);
-    health.push(res);
-  }
+//   for(const uri of uris){
+//     const res = await this.getHealthByUri(uri);
+//     health.push(res);
+//   }
 
-  health.map((chainHealth, idx)=>{
-    console.log(uris[idx]);
-    console.log(chainHealth.data.data);
+//   health.map((chainHealth, idx)=>{
+//     console.log(uris[idx]);
+//     console.log(chainHealth.data.data);
 
-    if(chainHealth.data){
-      if(healthiest === undefined){
-        healthiest = chainHealth;
-        console.log('no old healthiest');
-        // console.log(healthiest?.data.data);
-      }else{
-        //compare health
-        const currentHealthiestStatus = healthiest.data.data.indexingStatusForCurrentVersion;
-        const status = chainHealth.data.data.indexingStatusForCurrentVersion;
+//     if(chainHealth.data){
+//       if(healthiest === undefined){
+//         healthiest = chainHealth;
+//         console.log('no old healthiest');
+//         // console.log(healthiest?.data.data);
+//       }else{
+//         //compare health
+//         const currentHealthiestStatus = healthiest.data.data.indexingStatusForCurrentVersion;
+//         const status = chainHealth.data.data.indexingStatusForCurrentVersion;
 
-        if(status === null){
-          console.log(`no health returned`);
-        }else{
-          if(currentHealthiestStatus !== null)
-          if(parseInt(status.chains[0].latestBlock.number) > parseInt(currentHealthiestStatus.chains[0].latestBlock.number)){
-          healthiest = chainHealth;
-        }
-      }
-    }
-  }   
-  });
-  return healthiest;
-}
+//         if(status === null){
+//           console.log(`no health returned`);
+//         }else{
+//           if(currentHealthiestStatus !== null)
+//           if(parseInt(status.chains[0].latestBlock.number) > parseInt(currentHealthiestStatus.chains[0].latestBlock.number)){
+//           healthiest = chainHealth;
+//         }
+//       }
+//     }
+//   }   
+//   });
+//   return healthiest;
+// }
 
 async getHealthForAllChains(){
  
@@ -136,14 +137,16 @@ async init(){
     await client.set('health', JSON.stringify(healths));
   
     //test results
-    const r = await axios.get("http://localhost:1234/health");
-    console.log(`AXIOS result ${JSON.stringify(r.data)}`);
 
-    iterations++;
-    //for testing, sucks to pkill when the process doesnt exit gracefully
-    if(iterations > 15){
-      clearInterval(getHealthInterval);
-      process.exit(1);
+    if(TEST !== undefined){
+        const r = await axios.get("http://localhost:1234/health");
+        console.log(`AXIOS result ${JSON.stringify(r.data)}`);
+        iterations++;
+        //for testing, sucks to pkill when the process doesnt exit gracefully
+        if(iterations > 15){
+        clearInterval(getHealthInterval);
+        process.exit(1);
+        }
     }
   }, 5000);
 

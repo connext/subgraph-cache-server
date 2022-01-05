@@ -4,7 +4,6 @@ services:
   redis:
     container_name: redis
     image: "redis:latest"
-    command: "-e ALLOW_EMPTY_PASSWORD=yes"
     ports:
       - 6379:6379
     # volumes: tbd if we want some persistance logs etc.
