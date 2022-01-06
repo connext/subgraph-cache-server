@@ -1,163 +1,115 @@
-//mapping chainId to most in sync graph
-import {createClient} from 'redis';
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
+import { handleHealthRequest } from './handler'
+import { getDeployedSubgraphUri, getSubgraphHealth } from "./manualDeps";
 import axios from 'axios';
-import express from 'express';
-import {getDeployedSubgraphUri, getSubgraphHealth } from "./manualDeps";
-
-
-//pull from config
-const REDIS_URL = "127.0.0.1";
-const EXPRESS_PORT = "1234";
-//15 mins in ms. 
-const CACHE_EXPIRY = 1_000 * 60 * 15;
 const CHAINS_TO_MONITOR = [1,4,5,42];
-const TEST = process.env.TEST;
+// const TEST = process.env.TEST;
+const TEST = false;
 
 interface Healths{
   [key:number] : string[]
 }
 
-export class SubgraphHealthEndpont{
 
-constructor(){
- 
-}
+export class SubgraphHealthEndpoint{
+  constructor(){
 
-async  connectToRedis(){
-  const client = createClient();
-  await client.connect();
-  client.on('error', (e)=>console.log('couldnt connect to redis instance', e));
-  client.on('connected', (c)=>console.log('redis connected',c));
-  return client;
-}
-
-//parse out name of subgraph
-async  getHealthByUri(uri:string){
-  const length = uri.length;
-  const last = uri.lastIndexOf("/");
-  const subgraph = uri.substring(last +1, length);
-      
-  console.log(`call url @ ${uri}`);
-  console.log(`wtih subgraph name ${subgraph}`);
-  const health = await getSubgraphHealth(subgraph, uri);
-  return (health? health: undefined);
-
-}
-//possibly useful
-// async  determineBestSubgraphProvider(chainId:number){
-//   const uris = getDeployedSubgraphUri(chainId);
-//   const health = [];
-
-//   let healthiest: { data: { data: { indexingStatusForCurrentVersion: any; }; }; } | undefined = undefined;
-
-//   for(const uri of uris){
-//     const res = await this.getHealthByUri(uri);
-//     health.push(res);
-//   }
-
-//   health.map((chainHealth, idx)=>{
-//     console.log(uris[idx]);
-//     console.log(chainHealth.data.data);
-
-//     if(chainHealth.data){
-//       if(healthiest === undefined){
-//         healthiest = chainHealth;
-//         console.log('no old healthiest');
-//         // console.log(healthiest?.data.data);
-//       }else{
-//         //compare health
-//         const currentHealthiestStatus = healthiest.data.data.indexingStatusForCurrentVersion;
-//         const status = chainHealth.data.data.indexingStatusForCurrentVersion;
-
-//         if(status === null){
-//           console.log(`no health returned`);
-//         }else{
-//           if(currentHealthiestStatus !== null)
-//           if(parseInt(status.chains[0].latestBlock.number) > parseInt(currentHealthiestStatus.chains[0].latestBlock.number)){
-//           healthiest = chainHealth;
-//         }
-//       }
-//     }
-//   }   
-//   });
-//   return healthiest;
-// }
-
-async getHealthForAllChains(){
- 
-  const healthsByChainId:Healths = {};
-
-  for(const chainId of CHAINS_TO_MONITOR){
-    const uris = getDeployedSubgraphUri(chainId);
-    const chainHealths:string[] = [];
-    for(const uri of uris){
-      const chainHealth = await this.getHealthByUri(uri);
-      if(chainHealth){
-        chainHealths.push(JSON.stringify({url: uri, health: chainHealth}));
-      
-      }else{console.log(`no chain health available`);
-        chainHealths.push(JSON.stringify({url: uri, health: "null"}));
-      }
-    }
-    healthsByChainId[chainId] = chainHealths;
   }
-  return healthsByChainId;
+
+  async getHealthByUri(uri:string){
+    const length = uri.length;
+    const last = uri.lastIndexOf("/");
+    const subgraph = uri.substring(last +1, length);
+        
+    console.log(`call url @ ${uri}`);
+    console.log(`wtih subgraph name ${subgraph}`);
+    const health = await getSubgraphHealth(subgraph, uri);
+    return (health? health: undefined);
+  }
+
+  async getHealthForAllChains(){
+ 
+    const healthsByChainId:Healths = {};
   
-}
-
-async startExpressEndpoint(redisGetFn:(()=>any)){
-
-  console.log('start express server');
-  const app = express();
-
-  app.listen(EXPRESS_PORT, ()=>{
-    console.log("express started");
-  });
-  app.get('/health', async(req, res) => 
-    {
-      console.log("request to health endpoint");
-      res.send(await redisGetFn());
-    });
-
-  return app;
-}
-
-async init(){
-  const client = await this.connectToRedis();
-  const app = await this.startExpressEndpoint(async()=>{return await res();});
-
-  //fn to get health of all chains from redis
-  const res = async ()=> {return await client.get('health');};
-  //set healths of all chains on interval
-  let iterations = 0;
-  const getHealthInterval = setInterval(async()=>{
-    console.log("setting health");
-    
-    const healths = await this.getHealthForAllChains();
-    await client.set('health', JSON.stringify(healths));
-  
-    //test results
-
-    if(TEST !== undefined){
-        const r = await axios.get("http://localhost:1234/health");
-        console.log(`AXIOS result ${JSON.stringify(r.data)}`);
-        iterations++;
-        //for testing, sucks to pkill when the process doesnt exit gracefully
-        if(iterations > 15){
-        clearInterval(getHealthInterval);
-        process.exit(1);
+    for(const chainId of CHAINS_TO_MONITOR){
+      const uris = getDeployedSubgraphUri(chainId);
+      const chainHealths:string[] = [];
+      for(const uri of uris){
+        const chainHealth = await this.getHealthByUri(uri);
+        if(chainHealth){
+          chainHealths.push(JSON.stringify({url: uri, health: chainHealth}));
+        
+        }else{console.log(`no chain health available`);
+          chainHealths.push(JSON.stringify({url: uri, health: "null"}));
         }
+      }
+      healthsByChainId[chainId] = chainHealths;
     }
-  }, 5000);
+    return healthsByChainId;
+    
+  }
 
-  getHealthInterval;
-}
+  async init(){
+    // setInterval(async()=>{
+      console.log("setting health");
+      
+      const healths = await this.getHealthForAllChains();
+      //@ts-ignore
+      await HEALTHS.set("health", JSON.stringify(healths));
 
+    // }, 5000);    
+  }
 }
 
 export async function makeServer(){
-  const endpoint = new SubgraphHealthEndpont();
+  const endpoint = new SubgraphHealthEndpoint();
   await endpoint.init();
 }
 
-makeServer();
+//broken query
+async function tryaxios(){
+  try{
+    const res = await axios({
+      url: "connext.bwarelabs.com/subgraphs/name/connext",
+      method: "post",
+      data: {
+        query: `{
+        indexingStatusForCurrentVersion(subgraphName: "/nxtp-mainnet-v1-runtime") {
+          health
+          synced
+          fatalError {
+            message
+            block {
+              number
+            }
+            handler
+          }
+          chains {
+            network
+            chainHeadBlock {
+              number
+            }
+            latestBlock {
+              number
+            }
+            lastHealthyBlock {
+              number
+            }
+          }
+        }
+      }`,
+      },
+    });
+}catch(e){console.log(`query error`, e)}
+}
+// makeServer();
+
+addEventListener('fetch', (event) => {
+  event.respondWith(handleHealthRequest(event.request)) 
+  //@ts-ignore
+  HEALTHS.get("subghealth")
+  //this query is broken 
+  tryaxios().then(()=>{console.log('axiostried')})
+});
+  
+

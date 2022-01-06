@@ -1,34 +1,41 @@
 {
-  "name": "subgraph-cache-server",
-  "version": "0.0.1",
-  "main": "dist/index.js",
-  "repository": "https://github.com/connext/subgraph-cache-server",
-  "author": "base0010 <marcus@gatekeeper.network>",
-  "license": "MIT",
+  "name": "worker-typescript-template",
+  "version": "1.0.0",
+  "description": "Cloudflare worker TypeScript template",
+  "main": "dist/worker.js",
   "scripts": {
-    "docker:redis:up": "docker-compose -f ops/redis.docker-compose.yml up -d",
-    "docker:redis:down": "docker-compose -f ops/redis.docker-compose.yml down",
-    "start": "node dist/index.js",
-    "dev": "yarn build --watch --preserveWatchOutput",
-    "lint": "eslint ./src --ext .ts --env node",
-    "test": "ts-mocha --check-leaks --exit --timeout 60000 'test/**/*.spec.ts'",
-    "clean": "rimraf ./dist ./tsconfig.tsBuildInfo",
-    "build": "tsc --build ./tsconfig.build.json",
-    "verify": "yarn test && yarn clean && yarn build && yarn lint --max-warnings 0",
-    "purge": "yarn clean && rimraf ./coverage ./node_modules",
-    "tsp": "yarn run tsp:root \"$@\" --cwd $(pwd)"
+    "build": "webpack",
+    "format": "prettier --write  '*.{json,js}' 'src/**/*.{js,ts}' 'test/**/*.{js,ts}'",
+    "lint": "eslint --max-warnings=0 src && prettier --check '*.{json,js}' 'src/**/*.{js,ts}' 'test/**/*.{js,ts}'",
+    "test": "jest --config jestconfig.json --verbose"
   },
-  "dependencies": {
-    "@connext/nxtp-utils": "^0.1.10",
-    "express": "^4.17.2",
-    "redis": "^4.0.1"
+  "author": "author",
+  "license": "MIT OR Apache-2.0",
+  "eslintConfig": {
+    "root": true,
+    "extends": [
+      "typescript",
+      "prettier"
+    ]
   },
-  "packageManager": "yarn@3.1.1",
   "devDependencies": {
-    "@types/express": "^4.17.13",
-    "@typescript-eslint/eslint-plugin": "^5.9.0",
-    "graphql-request": "^3.7.0",
-    "sinon-chai": "^3.7.0",
-    "typescript": "^4.5.4"
-  }
+    "@cloudflare/workers-types": "^3.0.0",
+    "@types/jest": "^26.0.23",
+    "@types/node": "^17.0.8",
+    "@types/service-worker-mock": "^2.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.16.1",
+    "@typescript-eslint/parser": "^4.16.1",
+    "eslint": "^7.21.0",
+    "eslint-config-prettier": "^8.1.0",
+    "eslint-config-typescript": "^3.0.0",
+    "jest": "^27.0.1",
+    "prettier": "^2.3.0",
+    "service-worker-mock": "^2.0.5",
+    "ts-jest": "^27.0.1",
+    "ts-loader": "^9.2.2",
+    "typescript": "^4.3.2",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.0"
+  },
+  "dependencies": {}
 }

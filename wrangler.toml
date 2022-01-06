@@ -1,0 +1,25 @@
+name = "subgraph-ts-worker"
+type = "javascript"
+zone_id = ""
+account_id = "***"
+oauth_token = "***"
+refresh_token = "***"
+expiration_time = "***"
+route = ""
+workers_dev = true
+compatibility_date = "2022-01-05"
+
+kv_namespaces = [ 
+	 { id="***", binding = "HEALTHS", preview_id = "***" },
+
+]
+webpack_config = "webpack.config.js"
+
+
+
+[build]
+command = "npm install && npm run build"
+[build.upload]
+format = "service-worker"
+
+

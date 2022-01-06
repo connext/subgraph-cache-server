@@ -1,3 +1,4 @@
+//shim for types /fn() that we cant import from nxtp-utils for some reason
 import axios from 'axios';
 
 export const getDeployedSubgraphUri = (chainId: number, chainData?: Map<string, ChainData>): string[] => {
@@ -171,8 +172,9 @@ type SubgraphHealthError = {
     if (!healthUrl) {
       return undefined;
     }
-  
-    const res = await axios({
+    let res;
+    try{
+    res = await axios({
       url: healthUrl,
       method: "post",
       data: {
@@ -203,6 +205,7 @@ type SubgraphHealthError = {
       }`,
       },
     });
+}catch(e){console.log(`query error`, e)}
     /**
      * Example res:
      * {
