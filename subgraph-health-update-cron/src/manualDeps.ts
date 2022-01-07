@@ -1,43 +1,75 @@
-import axios from "axios";
+import axios from 'axios'
 
-const getSubgraphName = (url: string) => {
-  const split = url.split("/");
-  return split[split.length - 1];
-};
+export const getSubgraphName = (url: string) => {
+  const split = url.split('/')
+  return split[split.length - 1]
+}
 
 // TODO get from chainData
 const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
-  if (url.includes("connext.bwarelabs.com/subgraphs/name/connext")) {
-    return "https://connext.bwarelabs.com/bsc/index-node/graphql";
-  } else if (url.includes("api.thegraph.com/subgraphs/name/connext")) {
-    return "https://api.thegraph.com/index-node/graphql";
-  } else if (url.includes("subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-bsc")) {
-    return "https://subgraphs.connext.p2p.org/nxtp-bsc-health-check";
-  } else if (url.includes("subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-matic")) {
-    return "https://subgraphs.connext.p2p.org/nxtp-matic-health-check";
+  if (url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-bsc')) {
+    return 'https://connext.bwarelabs.com/bsc/index-node/graphql'
+  } else if (
+    url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-mainnet')
+  ) {
+    return 'https://connext.bwarelabs.com/ethereum/index-node/graphql'
+  } else if (
+    url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-xdai')
+  ) {
+    return 'https://connext.bwarelabs.com/xdai/index-node/graphql'
+  } else if (
+    url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-matic')
+  ) {
+    return 'https://connext.bwarelabs.com/matic/index-node/graphql'
+  } else if (
+    url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-fantom')
+  ) {
+    return 'https://connext.bwarelabs.com/fantom/index-node/graphql'
+  } else if (
+    url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-moonriver')
+  ) {
+    return 'https://connext.bwarelabs.com/moonriver/index-node/graphql'
+  } else if (
+    url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-avalanche')
+  ) {
+    return 'https://connext.bwarelabs.com/avalanche/index-node/graphql'
+  } else if (
+    url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-arbitrum')
+  ) {
+    return 'https://connext.bwarelabs.com/arbitrum/index-node/graphql'
+  } else if (url.includes('api.thegraph.com/subgraphs/name/connext')) {
+    return 'https://api.thegraph.com/index-node/graphql'
+  } else if (
+    url.includes('subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-bsc')
+  ) {
+    return 'https://subgraphs.connext.p2p.org/nxtp-bsc-health-check'
+  } else if (
+    url.includes('subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-matic')
+  ) {
+    return 'https://subgraphs.connext.p2p.org/nxtp-matic-health-check'
   }
-  return undefined;
-};
+  return undefined
+}
 
 // TODO: Make an actual error type for this?
 type SubgraphHealthError = {
-  message: string;
-  block: number;
-  handler: any;
-};
+  message: string
+  block: number
+  handler: any
+}
 
 type SubgraphHealth = {
-  chainHeadBlock: number;
-  latestBlock: number;
-  lastHealthyBlock: number | undefined;
-  network: string;
-  fatalError: SubgraphHealthError | undefined;
+  chainHeadBlock: number
+  latestBlock: number
+  lastHealthyBlock: number | undefined
+  network: string
+  fatalError: SubgraphHealthError | undefined
   health:
-    | "healthy" // Subgraph syncing normally
-    | "unhealthy" // Subgraph syncing but with errors
-    | "failed"; // Subgraph halted due to errors
-  synced: boolean;
-};
+    | 'healthy' // Subgraph syncing normally
+    | 'unhealthy' // Subgraph syncing but with errors
+    | 'failed' // Subgraph halted due to errors
+  synced: boolean
+}
 
 /**
  *
@@ -57,16 +89,18 @@ type SubgraphHealth = {
  * - synced: whether the subgraph is synced to the network
  */
 
-export const getSubgraphHealth = async (subgraphName: string, url: string): Promise<SubgraphHealth | undefined> => {
-  const healthUrl = GET_SUBGRAPH_HEALTH_URL(url);
+export const getSubgraphHealth = async (
+  subgraphName: string,
+  url: string,
+): Promise<any> => {
+  const healthUrl = GET_SUBGRAPH_HEALTH_URL(url)
   if (!healthUrl) {
-    return undefined;
+    return undefined
   }
 
-  const res = await axios({
-    url: healthUrl,
-    method: "post",
-    data: {
+  const res = await fetch(healthUrl, {
+    method: 'post',
+    body: JSON.stringify({
       query: `{
       indexingStatusForCurrentVersion(subgraphName: "connext/${subgraphName}") {
         health
@@ -92,8 +126,8 @@ export const getSubgraphHealth = async (subgraphName: string, url: string): Prom
         }
       }
     }`,
-    },
-  });
+    }),
+  })
   /**
    * Example res:
    * {
@@ -116,19 +150,24 @@ export const getSubgraphHealth = async (subgraphName: string, url: string): Prom
    *   },
    * }
    */
-  if (res && res.data && res.data.data && res.data.data.indexingStatusForCurrentVersion) {
-    const status = res.data.data.indexingStatusForCurrentVersion;
-    const networkInfo = status.chains[0];
-    const record = {
-      chainHeadBlock: parseInt(networkInfo.chainHeadBlock.number),
-      latestBlock: parseInt(networkInfo.latestBlock.number),
-      lastHealthyBlock: parseInt(networkInfo.lastHealthyBlock.number),
-      network: networkInfo.network,
-      fatalError: status.fatalError,
-      health: status.health,
-      synced: status.synced,
-    };
-    return record;
-  }
-  return undefined;
-};
+  // if (
+  //   res &&
+  //   res.data &&
+  //   res.data.data &&
+  //   res.data.data.indexingStatusForCurrentVersion
+  // ) {
+  //   const status = res.data.data.indexingStatusForCurrentVersion
+  //   const networkInfo = status.chains[0]
+  //   const record = {
+  //     chainHeadBlock: parseInt(networkInfo.chainHeadBlock.number),
+  //     latestBlock: parseInt(networkInfo.latestBlock.number),
+  //     lastHealthyBlock: parseInt(networkInfo.lastHealthyBlock.number),
+  //     network: networkInfo.network,
+  //     fatalError: status.fatalError,
+  //     health: status.health,
+  //     synced: status.synced,
+  //   }
+  //   return record
+  // }
+  return await res.json()
+}

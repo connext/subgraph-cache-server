@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { handleHealthRequest } from './handler'
+import { handleUpdateRequest } from './handler'
 import { getSubgraphHealth } from './manualDeps'
 const CHAINS_TO_MONITOR = [1, 4, 5, 42]
 // const TEST = process.env.TEST;
@@ -107,5 +107,5 @@ addEventListener('fetch', async (event) => {
   //@ts-ignore
   // HEALTHS.get('subghealth')
   //this query is broken
-  event.respondWith(handleHealthRequest(event.request))
+  event.respondWith(handleUpdateRequest(event.request))
 })
