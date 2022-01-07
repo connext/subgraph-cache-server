@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
+    "outDir": "health-update-cron/dist",
     "module": "commonjs",
     "target": "esnext",
     "lib": ["esnext"],
@@ -16,8 +16,8 @@
       "@types/service-worker-mock"
     ]
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist", "test"],
+  "include": ["store-update-cron/src"],
+  "exclude": ["node_modules", "health-ustore-update-cron/teste-cron/dist", "test"],
   "typeAcquisition": { "enable": true }
 
 }

@@ -1,5 +1,10 @@
 import axios from "axios";
 
+const getSubgraphName = (url: string) => {
+  const split = url.split("/");
+  return split[split.length - 1];
+};
+
 // TODO get from chainData
 const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
   if (url.includes("connext.bwarelabs.com/subgraphs/name/connext")) {

@@ -1,4 +1,4 @@
-name = "subgraph-ts-worker"
+name = "subgraph-health-update-cron"
 type = "javascript"
 zone_id = ""
 account_id = ""
