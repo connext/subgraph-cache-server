@@ -107,5 +107,5 @@ addEventListener('fetch', async (event) => {
   //@ts-ignore
   // HEALTHS.get('subghealth')
   //this query is broken
-  event.respondWith(tryaxios())
+  event.respondWith(handleHealthRequest(event.request))
 })

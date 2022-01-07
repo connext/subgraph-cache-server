@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 export async function handleHealthRequest(request: Request): Promise<Response> {
+  const chainDataRes = await fetch("https://raw.githubusercontent.com/connext/chaindata/main/crossChain.json")
+  const chainData = await chainDataRes.json();
+  console.log('chainData: ', JSON.stringify(chainData));
   // const value = await HEALTH.get("first-key")
   // const value = 'he'
   // if (value === null) {
