@@ -1,5 +1,7 @@
-import axios from 'axios';
-
+//shim for types /fn() that we cant import from nxtp-utils for some reason
+export interface Healths{
+  [key:number] : string
+}
 export const getDeployedSubgraphUri = (chainId: number, chainData?: Map<string, ChainData>): string[] => {
     if (chainData) {
       const subgraph = chainData?.get(chainId.toString())?.subgraph;
@@ -115,18 +117,49 @@ export const getDeployedSubgraphUri = (chainId: number, chainData?: Map<string, 
   };
 
   const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
-    if (url.includes("connext.bwarelabs.com/subgraphs/name/connext")) {
-      return "https://connext.bwarelabs.com/bsc/index-node/graphql";
-    } else if (url.includes("api.thegraph.com/subgraphs/name/connext")) {
-      return "https://api.thegraph.com/index-node/graphql";
-    } else if (url.includes("subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-bsc")) {
-      return "https://subgraphs.connext.p2p.org/nxtp-bsc-health-check";
-    } else if (url.includes("subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-matic")) {
-      return "https://subgraphs.connext.p2p.org/nxtp-matic-health-check";
+    if (url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-bsc')) {
+      return 'https://connext.bwarelabs.com/bsc/index-node/graphql'
+    } else if (
+      url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-mainnet')
+    ) {
+      return 'https://connext.bwarelabs.com/ethereum/index-node/graphql'
+    } else if (
+      url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-xdai')
+    ) {
+      return 'https://connext.bwarelabs.com/xdai/index-node/graphql'
+    } else if (
+      url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-matic')
+    ) {
+      return 'https://connext.bwarelabs.com/matic/index-node/graphql'
+    } else if (
+      url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-fantom')
+    ) {
+      return 'https://connext.bwarelabs.com/fantom/index-node/graphql'
+    } else if (
+      url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-moonriver')
+    ) {
+      return 'https://connext.bwarelabs.com/moonriver/index-node/graphql'
+    } else if (
+      url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-avalanche')
+    ) {
+      return 'https://connext.bwarelabs.com/avalanche/index-node/graphql'
+    } else if (
+      url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-arbitrum')
+    ) {
+      return 'https://connext.bwarelabs.com/arbitrum/index-node/graphql'
+    } else if (url.includes('api.thegraph.com/subgraphs/name/connext')) {
+      return 'https://api.thegraph.com/index-node/graphql'
+    } else if (
+      url.includes('subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-bsc')
+    ) {
+      return 'https://subgraphs.connext.p2p.org/nxtp-bsc-health-check'
+    } else if (
+      url.includes('subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-matic')
+    ) {
+      return 'https://subgraphs.connext.p2p.org/nxtp-matic-health-check'
     }
-    return undefined;
-  };
-
+    return undefined
+  }  
 
 // TODO: Make an actual error type for this?
 type SubgraphHealthError = {
@@ -171,11 +204,10 @@ type SubgraphHealthError = {
     if (!healthUrl) {
       return undefined;
     }
-  
-    const res = await axios({
-      url: healthUrl,
+
+    const res = await fetch(healthUrl,{
       method: "post",
-      data: {
+      body: JSON.stringify({
         query: `{
         indexingStatusForCurrentVersion(subgraphName: "connext/${subgraphName}") {
           health
@@ -201,7 +233,7 @@ type SubgraphHealthError = {
           }
         }
       }`,
-      },
+      }),
     });
     /**
      * Example res:
@@ -225,19 +257,8 @@ type SubgraphHealthError = {
      *   },
      * }
      */
-    if (res && res.data && res.data.data && res.data.data.indexingStatusForCurrentVersion) {
-      const status = res.data.data.indexingStatusForCurrentVersion;
-      const networkInfo = status.chains[0];
-      const record = {
-        chainHeadBlock: parseInt(networkInfo.chainHeadBlock?.number),
-        latestBlock: parseInt(networkInfo.latestBlock?.number),
-        lastHealthyBlock: parseInt(networkInfo.lastHealthyBlock?.number),
-        network: networkInfo.network,
-        fatalError: status.fatalError,
-        health: status.health,
-        synced: status.synced,
-      };
-      return record;
+    if (res) {
+      return res.json();
     }
     return undefined;
   };

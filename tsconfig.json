@@ -1,7 +1,0 @@
-{
-  "extends": "./config/tsconfig.node.json",
-  "compilerOptions": {
-    
-  },
-  "exclude": []
-}
