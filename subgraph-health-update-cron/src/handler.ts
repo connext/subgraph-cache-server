@@ -1,5 +1,4 @@
 import {getDeployedSubgraphUri, getSubgraphHealth, Healths} from './manualDeps';
-
 const CHAINS_TO_MONITOR = [1,4,5,42];
 
 async function getHealthByUri(uri:string){
@@ -28,6 +27,7 @@ export async function getCrosschainHealth() {
   await Promise.all(
     chainData.map(async (chain: { chainId:number, subgraph: string[] }) => {
       const subgraphUrls = chain.subgraph
+      if (subgraphUrls){
       await Promise.all(
         subgraphUrls.map(async (subgraphUrl: string) => {
           try {
@@ -43,7 +43,7 @@ export async function getCrosschainHealth() {
             console.error(`Error getting health for subgraph ${subgraphUrl}: `, err)
           }
         }),
-      )
+      )}
     }),
   )
 
