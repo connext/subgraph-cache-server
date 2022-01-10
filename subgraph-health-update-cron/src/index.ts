@@ -1,111 +1,72 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-import { handleUpdateRequest } from './handler'
-import { getSubgraphHealth } from './manualDeps'
-const CHAINS_TO_MONITOR = [1, 4, 5, 42]
+import { handleCronJob, handleHealthRequest } from './handler'
+import { getDeployedSubgraphUri, getSubgraphHealth } from "./manualDeps";
+import axios from 'axios';
+const CHAINS_TO_MONITOR = [1,4,5,42];
 // const TEST = process.env.TEST;
-const TEST = false
+const TEST = false;
 
-interface Healths {
-  [key: number]: string[]
+interface Healths{
+  [key:number] : string[]
 }
 
-const getHealthByUri = async (uri: string) => {
-  const length = uri.length
-  const last = uri.lastIndexOf('/')
-  const subgraph = uri.substring(last + 1, length)
 
-  console.log(`call url @ ${uri}`)
-  console.log(`wtih subgraph name ${subgraph}`)
-  const health = await getSubgraphHealth(subgraph, uri)
-  return health ? health : undefined
-}
+export class SubgraphHealthEndpoint{
+  constructor(){
 
-// TODO: pull subgraphs from crossChain.json
-// const getHealthForAllChains = async () => {
-//   const healthsByChainId: Healths = {}
+  }
 
-//   for (const chainId of CHAINS_TO_MONITOR) {
-//     const uris = getDeployedSubgraphUri(chainId)
-//     const chainHealths: string[] = []
-//     for (const uri of uris) {
-//       const chainHealth = await getHealthByUri(uri)
-//       if (chainHealth) {
-//         chainHealths.push(JSON.stringify({ url: uri, health: chainHealth }))
-//       } else {
-//         console.log(`no chain health available`)
-//         chainHealths.push(JSON.stringify({ url: uri, health: 'null' }))
-//       }
-//     }
-//     healthsByChainId[chainId] = chainHealths
-//   }
-//   return healthsByChainId
-// }
+  async getHealthByUri(uri:string): Promise<{ chainHeadBlock: number; latestBlock: number; lastHealthyBlock: number | undefined; network: string; fatalError: { message: string; block: number; handler: any; } | undefined; health: "healthy" | "unhealthy" | "failed"; synced: boolean; } | undefined>{
+    const length = uri.length;
+    const last = uri.lastIndexOf("/");
+    const subgraph = uri.substring(last +1, length);
+        
+    console.log(`call url @ ${uri}`);
+    console.log(`wtih subgraph name ${subgraph}`);
+    const health = await getSubgraphHealth(subgraph, uri);
+    return (health? health: undefined);
+  }
 
-const init = async () => {
-  // setInterval(async()=>{
-  console.log('setting health')
-
-  // const healths = await getHealthForAllChains()
-  //@ts-ignore
-  await HEALTHS.set('health', JSON.stringify(healths))
-
-  // }, 5000);
-}
-
-export async function makeServer() {
-  await init()
-}
-
-//broken query
-async function tryaxios() {
-  try {
-    const res = await fetch(
-      'https://connext.bwarelabs.com/bsc/index-node/graphql',
-      {
-        method: 'post',
-        body: JSON.stringify({
-          query: `{
-        indexingStatusForCurrentVersion(subgraphName: "connext/nxtp-mainnet-v1-runtime") {
-          health
-          synced
-          fatalError {
-            message
-            block {
-              number
-            }
-            handler
-          }
-          chains {
-            network
-            chainHeadBlock {
-              number
-            }
-            latestBlock {
-              number
-            }
-            lastHealthyBlock {
-              number
-            }
-          }
+  async getHealthForAllChains(){
+ 
+    const healthsByChainId:Healths = {};
+  
+    for(const chainId of CHAINS_TO_MONITOR){
+      const uris = getDeployedSubgraphUri(chainId);
+      const chainHealths:string[] = [];
+      for(const uri of uris){
+        const chainHealth = await this.getHealthByUri(uri);
+        if(chainHealth){
+          chainHealths.push(JSON.stringify({url: uri, health: chainHealth}));
+        
+        }else{console.log(`no chain health available`);
+          chainHealths.push(JSON.stringify({url: uri, health: "null"}));
         }
-      }`,
-        }),
-      },
-    )
-    console.log('res: ', JSON.stringify(await res.json()))
-    return new Response("hello")
-  } catch (e) {
-    console.log('e: ', e)
-    console.log(`query error`, e)
+      }
+      healthsByChainId[chainId] = chainHealths;
+    }
+    return healthsByChainId;
+  }
+
+  async init(){
+    // setInterval(async()=>{
+      console.log("setting health kv");
+      //@ts-ignore
+      const healths = await this.getHealthForAllChains();
+      //@ts-ignore
+      await HEALTHS.set("health", JSON.stringify(healths));
   }
 }
-// makeServer();
+export async function makeServer(){
+  const endpoint = new SubgraphHealthEndpoint();
+  await endpoint.init();
+}
 
-addEventListener('fetch', async (event) => {
-  // event.respondWith(handleHealthRequest(event.request))
-  //@ts-ignore
-  // HEALTHS.get('subghealth')
-  //this query is broken
-  event.respondWith(handleUpdateRequest(event.request))
-})
+addEventListener('fetch', (event) => {
+  event.respondWith(handleHealthRequest(event.request)) 
+  
+});
+addEventListener('scheduled', (event)=>{
+  event.waitUntil(handleCronJob());
+});
