@@ -2,7 +2,7 @@
 import {
   getDeployedSubgraphUri,
   getSubgraphHealth,
-  Healths,
+  Healths, GET_SUBGRAPH_HEALTH_URL
 } from './manualDeps'
 const CHAINS_TO_MONITOR = [1, 4, 5, 42]
 
@@ -38,25 +38,28 @@ export async function getCrosschainHealth() {
         return healthsByChainId[chain.chainId] = JSON.stringify({data: undefined});
       }
       if (subgraphUrls) {
-        
+        //statues for all urls 
+        const urlStatuses:string[] = [];
         await Promise.all(
           subgraphUrls.map(async (subgraphUrl: string) => {
             try {
               const status = await getSubgraphHealth(
                 getSubgraphName(subgraphUrl),
-                subgraphUrl,
+                subgraphUrl
               )
-              console.log('status: ', status)
-              healthsByChainId[chain.chainId] = 
-                JSON.stringify(status)
-              
-              // save status to kv store
+              if(status){
+              status.url = subgraphUrl;
+              console.log('status: ', status);
+              urlStatuses.push(JSON.stringify(status));
+              console.log(urlStatuses);
+              }
             } catch (err) {
               console.error(
                 `Error getting health for subgraph ${subgraphUrl}: `,
                 err,
               )
             }
+              healthsByChainId[chain.chainId] = JSON.stringify([urlStatuses])
           }),
         )
       }

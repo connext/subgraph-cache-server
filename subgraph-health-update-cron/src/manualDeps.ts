@@ -116,7 +116,7 @@ export const getDeployedSubgraphUri = (chainId: number, chainData?: Map<string, 
     }[];
   };
 
-  const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
+  export const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
     if (url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-bsc')) {
       return 'https://connext.bwarelabs.com/bsc/index-node/graphql'
     } else if (
@@ -179,6 +179,7 @@ type SubgraphHealthError = {
       | "unhealthy" // Subgraph syncing but with errors
       | "failed"; // Subgraph halted due to errors
     synced: boolean;
+    url: string;
   };
   
   /**
