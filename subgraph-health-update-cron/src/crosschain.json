@@ -948,6 +948,9 @@
       "networkId": 1287,
       "nativeCurrency": { "name": "Dev", "symbol": "DEV", "decimals": 18 },
       "rpc": ["https://rpc.testnet.moonbeam.network"],
+      "subgraph": [
+        
+      ],
       "explorers": [
         {
           "name": "moonbase",
@@ -972,6 +975,9 @@
         "decimals": 18
       },
       "rpc": ["https://api.avax-test.network/ext/bc/C/rpc"],
+      "subgraph": [
+       
+      ],
       "explorers": [
         {
           "name": "avalanche",

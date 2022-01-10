@@ -1,6 +1,6 @@
 //shim for types /fn() that we cant import from nxtp-utils for some reason
 export interface Healths{
-  [key:number] : string[]
+  [key:number] : string
 }
 export const getDeployedSubgraphUri = (chainId: number, chainData?: Map<string, ChainData>): string[] => {
     if (chainData) {
