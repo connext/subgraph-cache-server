@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@connext/nxtp-utils": "^0.1.12",
-    "axios": "^0.24.0"
+    "axios": "^0.24.0",
+    "itty-router": "^2.4.8"
   }
 }

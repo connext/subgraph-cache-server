@@ -1,21 +1,15 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import {Router} from 'itty-router';
+import { SubgraphSyncRecord } from '@connext/nxtp-utils'
 import {
-  getDeployedSubgraphUri,
   getSubgraphHealth,
-  Healths, GET_SUBGRAPH_HEALTH_URL
+  Healths,
+  SubgraphHealth,
 } from './manualDeps'
-const CHAINS_TO_MONITOR = [1, 4, 5, 42]
 
-async function getHealthByUri(uri: string) {
-  const length = uri.length
-  const last = uri.lastIndexOf('/')
-  const subgraph = uri.substring(last + 1, length)
+const router = Router();
 
-  console.log(`call url @ ${uri}`)
-  console.log(`wtih subgraph name ${subgraph}`)
-  const health = await getSubgraphHealth(subgraph, uri)
-  return health ? health : undefined
-}
+
 export const getSubgraphName = (url: string) => {
   const split = url.split('/')
   return split[split.length - 1]
@@ -32,26 +26,28 @@ export async function getCrosschainHealth() {
   await Promise.all(
     chainData.map(async (chain: { chainId: number; subgraph: string[] }) => {
       const subgraphUrls = chain.subgraph
-      console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`);
-      if(subgraphUrls === undefined){
+      console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`)
+      if (subgraphUrls === undefined) {
         console.log(`no configured subgraphs for this chain`)
-        return healthsByChainId[chain.chainId] = JSON.stringify({data: undefined});
+        return (healthsByChainId[chain.chainId] = JSON.stringify({
+          data: undefined,
+        }))
       }
       if (subgraphUrls) {
-        //statues for all urls 
-        const urlStatuses:string[] = [];
+        //statues for all urls
+        const urlStatuses: SubgraphHealth[] = []
         await Promise.all(
           subgraphUrls.map(async (subgraphUrl: string) => {
             try {
               const status = await getSubgraphHealth(
                 getSubgraphName(subgraphUrl),
-                subgraphUrl
+                subgraphUrl,
               )
-              if(status){
-              status.url = subgraphUrl;
-              console.log('status: ', status);
-              urlStatuses.push(JSON.stringify(status));
-              console.log(urlStatuses);
+              if (status) {
+                status.url = subgraphUrl
+                console.log('status: ', status)
+                urlStatuses.push(status)
+                console.log(urlStatuses)
               }
             } catch (err) {
               console.error(
@@ -59,37 +55,18 @@ export async function getCrosschainHealth() {
                 err,
               )
             }
-              healthsByChainId[chain.chainId] = JSON.stringify([urlStatuses])
+            healthsByChainId[chain.chainId] = JSON.stringify(urlStatuses)
           }),
         )
       }
     }),
   )
-
   return healthsByChainId
 }
 
-async function getHealthForAllChains() {
-  const healthsByChainId: Healths = {}
 
-  for (const chainId of CHAINS_TO_MONITOR) {
-    const uris = getDeployedSubgraphUri(chainId)
-    const chainHealths: string[] = []
-    for (const uri of uris) {
-      const chainHealth = await getHealthByUri(uri)
-      if (chainHealth) {
-        chainHealths.push(JSON.stringify({ url: uri, health: chainHealth }))
-      } else {
-        console.log(`no chain health available`)
-        chainHealths.push(JSON.stringify({ url: uri, health: 'null' }))
-      }
-    }
-    healthsByChainId[chainId] = JSON.stringify(chainHealths)
-  }
-  return healthsByChainId
-}
+
 export async function handleHealthRequest(request: Request): Promise<Response> {
-
   //@ts-ignore
   const kvhealth = await HEALTHS.get('health')
   if (!kvhealth) {
@@ -114,13 +91,35 @@ export async function handleHealthRequest(request: Request): Promise<Response> {
         const chainHealth = healths[chainId]
         chainIDHealths[chainId] = chainHealth
       }
-      console.log(JSON.stringify(chainIDHealths))
-      return new Response(JSON.stringify(chainIDHealths))
+      const obj = JSON.parse(chainIDHealths[1])
+      //@ts-ignore
+      const data = obj[0].data.indexingStatusForCurrentVersion.chains;
+
+      const mutateSubgraphHealth = (chains:any) =>{
+        for(const chain of chains){
+          // {
+          //   "chainHeadBlock": {
+          //     "number": "13983587"
+          //   },
+          //   "lastHealthyBlock": null,
+          //   "latestBlock": {
+          //     "number": "13983587"
+          //   },
+          //   "network": "mainnet"
+          // }
+          console.log((chain));
+        }
+      }
+      //input chains
+      console.log(mutateSubgraphHealth(data));
+      return new Response(JSON.stringify(data));
+
     } else {
       //single health
       const cid = decodeURIComponent(queryString.toString().substring(8))
       const health = JSON.parse(kvhealth)
-      return new Response(health[parseInt(cid)])
+      const singleHealth = health[parseInt(cid)]
+      return new Response(JSON.stringify(singleHealth));
     }
   } else {
     //all healths
@@ -128,8 +127,23 @@ export async function handleHealthRequest(request: Request): Promise<Response> {
   }
 }
 
+async function tittyHandler(request:Request){
+  console.log("TITTIESDHKSHDLJHSFDLUFDLSHJHFD")
+}
+
 export async function handleCronJob() {
   const healths = await getCrosschainHealth()
   //@ts-ignore
   await HEALTHS.put('health', JSON.stringify(healths))
+}
+
+  router.get('/',  async (req:Request)=>{   await handleHealthRequest(req)});
+  router.get('/analytics',  async (req:Request)=>{ await tittyHandler(req)});
+  router.get('/ff', () => new Response("found tho", { status: 404 }));
+
+export  async function fetchMiddlewareHandler(request:Request):Promise<Response>{
+    console.log(`middleware ${request}`)
+    router.handle(request);
+    return new Response('foundfound', {status: 400});
+  
 }
