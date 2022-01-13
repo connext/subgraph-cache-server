@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import {
-  SubgraphHealth,
-  getSubgraphHealth,
-  Healths,
-} from './manualDeps'
+import { SubgraphHealth, getSubgraphHealth, Healths } from './manualDeps'
 
 export const getSubgraphName = (url: string) => {
   const split = url.split('/')
   return split[split.length - 1]
 }
+
 const mutateSubgraphHealth = (chain: any) => {
   console.log(chain)
   const needsMutation = chain.data.indexingStatusForCurrentVersion.chains[0]
@@ -20,6 +17,7 @@ const mutateSubgraphHealth = (chain: any) => {
   }
   return { ...chain, data: { indexingStatusForCurrentVersion: mutatedStatus } }
 }
+
 export async function handleHealthRequest(request: Request): Promise<Response> {
   //@ts-ignore
   const kvhealth = await HEALTHS.get('health')
@@ -42,12 +40,12 @@ export async function handleHealthRequest(request: Request): Promise<Response> {
       //get corresponding chains
       for (const chain of chains) {
         const chainId = parseInt(chain)
-        if (!chainId) {
-          throw 'not a chainId'
-        }
-
         const chainHealths = healths[chainId]
         const mutatedProviderArry = []
+
+        if (!chainHealths) {
+          return new Response(`No subgraph for ${chainId}`)
+        }
 
         for (const provider of JSON.parse(chainHealths)) {
           // console.log(typeof(providers));
@@ -65,15 +63,18 @@ export async function handleHealthRequest(request: Request): Promise<Response> {
       }
       const mutatedProviderArry = []
 
+      if (healths[chainId] === undefined) {
+        return new Response(`No subgraph for ${chainId}`)
+      }
       const chainHealths = JSON.parse(healths[chainId])
+
       for (const provider of chainHealths) {
         // console.log(typeof(providers));
         const mutatedData = mutateSubgraphHealth(provider)
         mutatedProviderArry.push(mutatedData)
-        
       }
-      console.log(mutatedProviderArry);
-      return new Response(JSON.stringify(mutatedProviderArry));
+      console.log(mutatedProviderArry)
+      return new Response(JSON.stringify(mutatedProviderArry))
     }
   } else {
     //raw healths
@@ -81,7 +82,7 @@ export async function handleHealthRequest(request: Request): Promise<Response> {
   }
 }
 
-export async function getCrosschainHealth() {
+export async function getCrosschainHealth():Promise<Healths | void> {
   const healthsByChainId: Healths = {}
 
   const chainDataRes = await fetch(
@@ -111,9 +112,7 @@ export async function getCrosschainHealth() {
               )
               if (status) {
                 status.url = subgraphUrl
-                console.log('status: ', status)
                 urlStatuses.push(status)
-                console.log(urlStatuses)
               }
             } catch (err) {
               console.error(
@@ -130,7 +129,7 @@ export async function getCrosschainHealth() {
   return healthsByChainId
 }
 
-export async function handleCronJob() {
+export async function handleCronJob() : Promise<void> {
   const healths = await getCrosschainHealth()
   //@ts-ignore
   await HEALTHS.put('health', JSON.stringify(healths))
