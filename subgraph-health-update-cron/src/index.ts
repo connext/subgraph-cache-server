@@ -2,69 +2,21 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import { handleCronJob, handleHealthRequest } from './handler'
 import { getDeployedSubgraphUri, getSubgraphHealth } from "./manualDeps";
-import axios from 'axios';
-const CHAINS_TO_MONITOR = [1,4,5,42];
+import { Router } from 'itty-router';
+
 // const TEST = process.env.TEST;
-const TEST = false;
 
-interface Healths{
-  [key:number] : string[]
-}
+const router = Router();
 
-
-export class SubgraphHealthEndpoint{
-  constructor(){
-
-  }
-
-  async getHealthByUri(uri:string): Promise<{ chainHeadBlock: number; latestBlock: number; lastHealthyBlock: number | undefined; network: string; fatalError: { message: string; block: number; handler: any; } | undefined; health: "healthy" | "unhealthy" | "failed"; synced: boolean; } | undefined>{
-    const length = uri.length;
-    const last = uri.lastIndexOf("/");
-    const subgraph = uri.substring(last +1, length);
-        
-    console.log(`call url @ ${uri}`);
-    console.log(`wtih subgraph name ${subgraph}`);
-    const health = await getSubgraphHealth(subgraph, uri);
-    return (health? health: undefined);
-  }
-
-  async getHealthForAllChains(){
- 
-    const healthsByChainId:Healths = {};
-  
-    for(const chainId of CHAINS_TO_MONITOR){
-      const uris = getDeployedSubgraphUri(chainId);
-      const chainHealths:string[] = [];
-      for(const uri of uris){
-        const chainHealth = await this.getHealthByUri(uri);
-        if(chainHealth){
-          chainHealths.push(JSON.stringify({url: uri, health: chainHealth}));
-        
-        }else{console.log(`no chain health available`);
-          chainHealths.push(JSON.stringify({url: uri, health: "null"}));
-        }
-      }
-      healthsByChainId[chainId] = chainHealths;
-    }
-    return healthsByChainId;
-  }
-
-  async init(){
-    // setInterval(async()=>{
-      console.log("setting health kv");
-      //@ts-ignore
-      const healths = await this.getHealthForAllChains();
-      //@ts-ignore
-      await HEALTHS.set("health", JSON.stringify(healths));
-  }
-}
-export async function makeServer(){
-  const endpoint = new SubgraphHealthEndpoint();
-  await endpoint.init();
-}
+router.get('/subgraph_health', async (req)=>{
+   return (await handleHealthRequest(req.url));
+})
+router.get('/router_livliness', async (req)=>{
+  return new Response(`Return The Livliness \n Request Info: ${JSON.stringify(req)}`);
+})
 
 addEventListener('fetch', (event) => {
-  event.respondWith(handleHealthRequest(event.request)) 
+  event.respondWith(router.handle(event.request)) 
   
 });
 addEventListener('scheduled', (event)=>{

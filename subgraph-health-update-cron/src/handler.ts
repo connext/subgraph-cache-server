@@ -18,14 +18,14 @@ const mutateSubgraphHealth = (chain: any) => {
   return { ...chain, data: { indexingStatusForCurrentVersion: mutatedStatus } }
 }
 
-export async function handleHealthRequest(request: Request): Promise<Response> {
+export async function handleHealthRequest(uri:string): Promise<Response> {
   //@ts-ignore
   const kvhealth = await HEALTHS.get('health')
   if (!kvhealth) {
     Error('couldnt fetch from kv store')
   }
   //parse out the query params
-  const url = new URL(request.url)
+  const url = new URL(uri)
   const queryString = url.search.slice(1).split('?')
 
   if (queryString && queryString.toString().includes('chainId=')) {
