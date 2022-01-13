@@ -15,7 +15,7 @@ router.get('/subgraph_health', async (req) => {
 })
 //router livliness form ec2
 router.get('/router_livliness', async (req) => {
-  return await handleLivlinessRequest(req.url)
+   return handleLivlinessRequest(req.url);
 })
 
 //handles http

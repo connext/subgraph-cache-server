@@ -1,3 +1,10 @@
+import { SubgraphHealth, getSubgraphHealth, Healths } from './manualDeps'
+
+export const getSubgraphName = (url: string):string => {
+    const split = url.split('/')
+    return split[split.length - 1]
+  }
+  
 export async function getCrosschainHealth(): Promise<Healths | void> {
   const healthsByChainId: Healths = {}
 

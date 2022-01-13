@@ -1,11 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { SubgraphHealth, getSubgraphHealth, Healths } from './manualDeps'
-
-export const getSubgraphName = (url: string) => {
-  const split = url.split('/')
-  return split[split.length - 1]
-}
+import { Healths } from './manualDeps'
 
 const mutateSubgraphHealth = (chain: any) => {
   console.log(chain)

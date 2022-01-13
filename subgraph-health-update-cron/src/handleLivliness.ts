@@ -1,5 +1,5 @@
-export function handleLivlinessRequest(req: Request): Response {
+export function handleLivlinessRequest(uri: string): Response {
   return new Response(
-    `Return The Livliness \n Request Info: ${JSON.stringify(req)}`,
+    `Return The Livliness \n Request Info: ${JSON.stringify(uri)}`,
   )
 }
