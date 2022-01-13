@@ -1,95 +1,26 @@
+/* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import {
-  getDeployedSubgraphUri,
+  SubgraphHealth,
   getSubgraphHealth,
-  Healths, GET_SUBGRAPH_HEALTH_URL
+  Healths,
 } from './manualDeps'
-const CHAINS_TO_MONITOR = [1, 4, 5, 42]
 
-async function getHealthByUri(uri: string) {
-  const length = uri.length
-  const last = uri.lastIndexOf('/')
-  const subgraph = uri.substring(last + 1, length)
-
-  console.log(`call url @ ${uri}`)
-  console.log(`wtih subgraph name ${subgraph}`)
-  const health = await getSubgraphHealth(subgraph, uri)
-  return health ? health : undefined
-}
 export const getSubgraphName = (url: string) => {
   const split = url.split('/')
   return split[split.length - 1]
 }
-
-export async function getCrosschainHealth() {
-  const healthsByChainId: Healths = {}
-
-  const chainDataRes = await fetch(
-    'https://raw.githubusercontent.com/connext/chaindata/main/crossChain.json',
-  )
-  const chainData: any = await chainDataRes.json()
-  console.log('chainData: ', JSON.stringify(chainData))
-  await Promise.all(
-    chainData.map(async (chain: { chainId: number; subgraph: string[] }) => {
-      const subgraphUrls = chain.subgraph
-      console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`);
-      if(subgraphUrls === undefined){
-        console.log(`no configured subgraphs for this chain`)
-        return healthsByChainId[chain.chainId] = JSON.stringify({data: undefined});
-      }
-      if (subgraphUrls) {
-        //statues for all urls 
-        const urlStatuses:string[] = [];
-        await Promise.all(
-          subgraphUrls.map(async (subgraphUrl: string) => {
-            try {
-              const status = await getSubgraphHealth(
-                getSubgraphName(subgraphUrl),
-                subgraphUrl
-              )
-              if(status){
-              status.url = subgraphUrl;
-              console.log('status: ', status);
-              urlStatuses.push(JSON.stringify(status));
-              console.log(urlStatuses);
-              }
-            } catch (err) {
-              console.error(
-                `Error getting health for subgraph ${subgraphUrl}: `,
-                err,
-              )
-            }
-              healthsByChainId[chain.chainId] = JSON.stringify([urlStatuses])
-          }),
-        )
-      }
-    }),
-  )
-
-  return healthsByChainId
-}
-
-async function getHealthForAllChains() {
-  const healthsByChainId: Healths = {}
-
-  for (const chainId of CHAINS_TO_MONITOR) {
-    const uris = getDeployedSubgraphUri(chainId)
-    const chainHealths: string[] = []
-    for (const uri of uris) {
-      const chainHealth = await getHealthByUri(uri)
-      if (chainHealth) {
-        chainHealths.push(JSON.stringify({ url: uri, health: chainHealth }))
-      } else {
-        console.log(`no chain health available`)
-        chainHealths.push(JSON.stringify({ url: uri, health: 'null' }))
-      }
-    }
-    healthsByChainId[chainId] = JSON.stringify(chainHealths)
+const mutateSubgraphHealth = (chain: any) => {
+  console.log(chain)
+  const needsMutation = chain.data.indexingStatusForCurrentVersion.chains[0]
+  const mutatedStatus = {
+    ...needsMutation,
+    chainHeadBlock: Number(needsMutation.chainHeadBlock.number),
+    latestBlock: Number(needsMutation.latestBlock.number),
   }
-  return healthsByChainId
+  return { ...chain, data: { indexingStatusForCurrentVersion: mutatedStatus } }
 }
 export async function handleHealthRequest(request: Request): Promise<Response> {
-
   //@ts-ignore
   const kvhealth = await HEALTHS.get('health')
   if (!kvhealth) {
@@ -103,29 +34,100 @@ export async function handleHealthRequest(request: Request): Promise<Response> {
     //length of "chainId="
     const chainIds = decodeURIComponent(queryString.toString().substring(8))
     const chainIDHealths: Healths = {}
+    //all healths across chainId by provider []
+    const healths = JSON.parse(kvhealth)
+    //multiple chains requested, split by , ie chainId
     if (chainIds.includes(',')) {
       const chains = chainIds.split(',')
-      const healths = JSON.parse(kvhealth)
-
       //get corresponding chains
       for (const chain of chains) {
         const chainId = parseInt(chain)
-        // console.log(`chainId: ${parseInt(chain)}`);
-        const chainHealth = healths[chainId]
-        chainIDHealths[chainId] = chainHealth
+        if (!chainId) {
+          throw 'not a chainId'
+        }
+
+        const chainHealths = healths[chainId]
+        const mutatedProviderArry = []
+
+        for (const provider of JSON.parse(chainHealths)) {
+          // console.log(typeof(providers));
+          const mutatedData = mutateSubgraphHealth(provider)
+          mutatedProviderArry.push(mutatedData)
+        }
+        chainIDHealths[chainId] = JSON.stringify(mutatedProviderArry)
       }
-      console.log(JSON.stringify(chainIDHealths))
       return new Response(JSON.stringify(chainIDHealths))
     } else {
       //single health
-      const cid = decodeURIComponent(queryString.toString().substring(8))
-      const health = JSON.parse(kvhealth)
-      return new Response(health[parseInt(cid)])
+      const chainId = parseInt(chainIds)
+      if (!chainId) {
+        throw 'not a chainId'
+      }
+      const mutatedProviderArry = []
+
+      const chainHealths = JSON.parse(healths[chainId])
+      for (const provider of chainHealths) {
+        // console.log(typeof(providers));
+        const mutatedData = mutateSubgraphHealth(provider)
+        mutatedProviderArry.push(mutatedData)
+        
+      }
+      console.log(mutatedProviderArry);
+      return new Response(JSON.stringify(mutatedProviderArry));
     }
   } else {
-    //all healths
+    //raw healths
     return new Response(kvhealth)
   }
+}
+
+export async function getCrosschainHealth() {
+  const healthsByChainId: Healths = {}
+
+  const chainDataRes = await fetch(
+    'https://raw.githubusercontent.com/connext/chaindata/main/crossChain.json',
+  )
+  const chainData: any = await chainDataRes.json()
+  console.log('chainData: ', JSON.stringify(chainData))
+  await Promise.all(
+    chainData.map(async (chain: { chainId: number; subgraph: string[] }) => {
+      const subgraphUrls = chain.subgraph
+      console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`)
+      if (subgraphUrls === undefined) {
+        console.log(`no configured subgraphs for this chain`)
+        return (healthsByChainId[chain.chainId] = JSON.stringify({
+          data: undefined,
+        }))
+      }
+      if (subgraphUrls) {
+        //statues for all urls
+        const urlStatuses: SubgraphHealth[] = []
+        await Promise.all(
+          subgraphUrls.map(async (subgraphUrl: string) => {
+            try {
+              const status = await getSubgraphHealth(
+                getSubgraphName(subgraphUrl),
+                subgraphUrl,
+              )
+              if (status) {
+                status.url = subgraphUrl
+                console.log('status: ', status)
+                urlStatuses.push(status)
+                console.log(urlStatuses)
+              }
+            } catch (err) {
+              console.error(
+                `Error getting health for subgraph ${subgraphUrl}: `,
+                err,
+              )
+            }
+            healthsByChainId[chain.chainId] = JSON.stringify(urlStatuses)
+          }),
+        )
+      }
+    }),
+  )
+  return healthsByChainId
 }
 
 export async function handleCronJob() {

@@ -168,7 +168,7 @@ type SubgraphHealthError = {
     handler: any;
   };
   
-  type SubgraphHealth = {
+  export type SubgraphHealth = {
     chainHeadBlock: number;
     latestBlock: number;
     lastHealthyBlock: number | undefined;
