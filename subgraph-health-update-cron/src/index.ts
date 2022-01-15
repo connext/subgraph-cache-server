@@ -10,12 +10,12 @@ import { Router } from 'itty-router'
 const router = Router()
 
 //subgraph health
-router.get('/subgraph_health', async (req) => {
-  return await handleHealthRequest(req.url)
+router.get('/subgraph_health', async (req:Request) => {
+  return await handleHealthRequest(req)
 })
 //router livliness form ec2
 router.get('/router_livliness', async (req) => {
-   return handleLivlinessRequest(req.url);
+  return handleLivlinessRequest(req.url)
 })
 
 //handles http

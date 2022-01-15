@@ -1,6 +1,40 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import { Healths } from './manualDeps'
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET,HEAD,POST,OPTIONS',
+  'Access-Control-Max-Age': '86400',
+}
+
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+export function handleOpts(headers:Headers) {
+
+  if (
+    headers.get('Origin') !== null &&
+    headers.get('Access-Control-Request-Method') !== null &&
+    headers.get('Access-Control-Request-Headers') !== null
+  ) {
+    const respHeaders = {
+      ...corsHeaders,
+      // Allow all future content Request headers to go back to browser
+      // such as Authorization (Bearer) or X-Client-Name-Version
+      'Access-Control-Allow-Headers': headers.get(
+      'Access-Control-Request-Headers',
+      ),
+    }
+    respHeaders
+  } else {
+    // Handle standard OPTIONS request.
+    // If you want to allow other HTTP Methods, you can do that here.
+    return {
+      headers: {
+        Allow: 'GET, HEAD, POST, OPTIONS',
+      }
+  }
+}
+}
+
 
 const mutateSubgraphHealth = (chain: any) => {
   console.log(chain)
@@ -13,14 +47,20 @@ const mutateSubgraphHealth = (chain: any) => {
   return { ...chain, data: { indexingStatusForCurrentVersion: mutatedStatus } }
 }
 
-export async function handleHealthRequest(uri: string): Promise<Response> {
+export async function handleHealthRequest(req: Request): Promise<Response> {
+  let headers; 
+
+  if (req.method === "OPTIONS"){
+     headers = handleOpts(req.headers);
+  }
+
   //@ts-ignore
   const kvhealth = await HEALTHS.get('health')
   if (!kvhealth) {
     Error('couldnt fetch from kv store')
   }
   //parse out the query params
-  const url = new URL(uri)
+  const url = new URL(req.url)
   const queryString = url.search.slice(1).split('?')
 
   if (queryString && queryString.toString().includes('chainId=')) {
@@ -39,7 +79,7 @@ export async function handleHealthRequest(uri: string): Promise<Response> {
         const mutatedProviderArry = []
 
         if (!chainHealths) {
-          return new Response(`No subgraph for ${chainId}`)
+          return new Response(`No subgraph for ${chainId}`, headers)
         }
 
         for (const provider of JSON.parse(chainHealths)) {
@@ -49,7 +89,7 @@ export async function handleHealthRequest(uri: string): Promise<Response> {
         }
         chainIDHealths[chainId] = JSON.stringify(mutatedProviderArry)
       }
-      return new Response(JSON.stringify(chainIDHealths))
+      return new Response(JSON.stringify(chainIDHealths), headers)
     } else {
       //single health
       const chainId = parseInt(chainIds)
@@ -59,7 +99,7 @@ export async function handleHealthRequest(uri: string): Promise<Response> {
       const mutatedProviderArry = []
 
       if (healths[chainId] === undefined) {
-        return new Response(`No subgraph for ${chainId}`)
+        return new Response(`No subgraph for ${chainId}`, headers)
       }
       const chainHealths = JSON.parse(healths[chainId])
 
@@ -69,10 +109,11 @@ export async function handleHealthRequest(uri: string): Promise<Response> {
         mutatedProviderArry.push(mutatedData)
       }
       console.log(mutatedProviderArry)
-      return new Response(JSON.stringify(mutatedProviderArry))
+      return new Response(JSON.stringify(mutatedProviderArry), headers)
     }
   } else {
     //raw healths
-    return new Response(kvhealth)
+    return new Response(kvhealth, headers)
   }
 }
+
