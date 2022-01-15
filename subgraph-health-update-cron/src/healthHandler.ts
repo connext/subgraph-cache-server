@@ -77,7 +77,7 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
         const chainId = parseInt(chain)
         const chainHealths = healths[chainId]
         const mutatedProviderArry = []
-
+    
         if (!chainHealths) {
           return new Response(`No subgraph for ${chainId}`, headers)
         }
@@ -89,7 +89,15 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
         }
         chainIDHealths[chainId] = JSON.stringify(mutatedProviderArry)
       }
-      return new Response(JSON.stringify(chainIDHealths), headers)
+
+      const res = new Response(JSON.stringify(chainIDHealths), headers);
+
+      res.headers.set("Access-Control-Allow-Origin", "*");
+      res.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+      res.headers.set('Access-Control-Max-Age', '86400');
+
+      return res;
+
     } else {
       //single health
       const chainId = parseInt(chainIds)
@@ -108,12 +116,22 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
         const mutatedData = mutateSubgraphHealth(provider)
         mutatedProviderArry.push(mutatedData)
       }
-      console.log(mutatedProviderArry)
-      return new Response(JSON.stringify(mutatedProviderArry), headers)
+      console.log(mutatedProviderArry);
+      const res =  new Response(JSON.stringify(mutatedProviderArry));
+
+      res.headers.set("Access-Control-Allow-Origin", "*");
+      res.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+      res.headers.set('Access-Control-Max-Age', '86400');
+
+      return res;
     }
   } else {
     //raw healths
-    return new Response(kvhealth, headers)
+    const res =  new Response(kvhealth, headers);
+    res.headers.set("Access-Control-Allow-Origin", "*");
+    res.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
+    res.headers.set('Access-Control-Max-Age', '86400');
+    return res;
   }
 }
 
