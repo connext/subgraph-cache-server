@@ -42,9 +42,9 @@ const mutateSubgraphHealth = (chain: any) => {
   const mutatedStatus = {
     ...needsMutation,
     chainHeadBlock: Number(needsMutation.chainHeadBlock.number),
-    latestBlock: Number(needsMutation.latestBlock.number),
+    syncedBlock: Number(needsMutation.latestBlock.number),
   }
-  return { ...chain, data: { indexingStatusForCurrentVersion: mutatedStatus } }
+  return { ...chain, data: { ...mutatedStatus } }
 }
 
 export async function handleHealthRequest(req: Request): Promise<Response> {
