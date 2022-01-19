@@ -1,0 +1,23 @@
+name: CF Worker Publish
+on:
+  push:
+    branches:
+        -main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Publish Worker
+    steps:
+      - uses: actions/checkout@v2.0.0
+      - name: install
+        run: 'npm install'
+      - name: install wrangler
+        run: 'npm install -g @cloudflare/wrangler'
+      - name: publish
+        run: 'wrangler publish' 
+      env: 
+       CF_ACCOUNT_ID: ${{secrets.CF_ACCOUNT_ID}}
+       CF_ZONE_ID: ${{secrets.CF_ZONE_ID}}
+       CF_API_TOKEN: ${{secrets.CF_API_TOKEN}}
+
