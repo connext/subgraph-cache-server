@@ -1,10 +1,6 @@
 name = "subgraph-ts-worker"
 type = "javascript"
 zone_id = ""
-account_id = "dc83b53169c2c64bdaa6f1bdef134d7e"
-oauth_token = "TaK9ZjxTbIHlxZHlIw_UDI4uc9XREkm0dCq9Z9g-UGQ.GbkjuYqw6WPsSdpGTrj7_T1IvvJkkVG_4PgEKaU2cmM"
-refresh_token = "QWyahMSForvNaf0nCuGT7PRhSLoNiszgvIXBbwXrAuQ.kMluaI3uJj5sAO-JsNheld0PfemX9yzzgAGclqqJlh8"
-expiration_time = "2022-01-05T23:13:51.873400561+00:00"
 workers_dev = true
 compatibility_date = "2022-01-05"
 
