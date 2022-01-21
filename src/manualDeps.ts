@@ -151,6 +151,10 @@ export const getDeployedSubgraphUri = (chainId: number, chainData?: Map<string, 
       url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-arbitrum')
     ) {
       return 'https://connext.bwarelabs.com/arbitrum/index-node/graphql'
+    } else if (
+      url.includes('connext.bwarelabs.com/subgraphs/name/connext/nxtp-moonbeam')
+    ) {
+      return 'https://connext.bwarelabs.com/moonbeam/index-node/graphql'
     } else if (url.includes('api.thegraph.com/subgraphs/name/connext')) {
       return 'https://api.thegraph.com/index-node/graphql'
     } else if (
