@@ -908,7 +908,6 @@
       "nativeCurrency": { "name": "Moonriver", "symbol": "MOVR", "decimals": 18 },
       "rpc": ["https://rpc.moonriver.moonbeam.network"],
       "subgraph": [
-        "https://connext.bwarelabs.com/subgraphs/name/connext/nxtp-moonriver-v1-runtime",
         "https://api.thegraph.com/subgraphs/name/connext/nxtp-moonriver-v1-runtime"
       ],
       "analyticsSubgraph": [
