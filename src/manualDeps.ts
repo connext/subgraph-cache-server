@@ -42,6 +42,12 @@ export const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
   if (url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-bsc")) {
     return "https://connext.bwarelabs.com/bsc/index-node/graphql";
   } else if (
+    url.includes(
+      "connext-firehose.bwarelabs.com/subgraphs/name/connext/nxtp-bsc"
+    )
+  ) {
+    return "https://connext-firehose.bwarelabs.com/index-node/graphql";
+  } else if (
     url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-mainnet")
   ) {
     return "https://connext.bwarelabs.com/ethereum/index-node/graphql";
