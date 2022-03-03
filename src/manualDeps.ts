@@ -79,6 +79,10 @@ export const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
     url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-moonbeam")
   ) {
     return "https://connext.bwarelabs.com/moonbeam/index-node/graphql";
+  } else if (
+    url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-milkomeda-cardano")
+  ) {
+    return "https://connext.bwarelabs.com/milkomeda-cardano/index-node/graphql/";
   } else if (url.includes("api.thegraph.com/subgraphs/name/connext")) {
     return "https://api.thegraph.com/index-node/graphql";
   } else if (
