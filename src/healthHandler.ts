@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
+import { getCrosschainHealth } from './cronHandler'
 import { Healths } from './manualDeps'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -48,6 +49,7 @@ const mutateSubgraphHealth = (chain: any) => {
 }
 
 export async function handleHealthRequest(req: Request): Promise<Response> {
+  await getCrosschainHealth();
   let headers; 
 
   if (req.method === "OPTIONS"){
@@ -126,7 +128,6 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
       return res;
     }
   } else {
-    //raw healths
     const res =  new Response(kvhealth, headers);
     res.headers.set("Access-Control-Allow-Origin", "*");
     res.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');

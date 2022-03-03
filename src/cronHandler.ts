@@ -29,6 +29,7 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
         await Promise.all(
           subgraphUrls.map(async (subgraphUrl: string) => {
             try {
+              console.log(getSubgraphName(subgraphUrl));
               const status = await getSubgraphHealth(
                 getSubgraphName(subgraphUrl),
                 subgraphUrl,
@@ -39,7 +40,7 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
               }
             } catch (err) {
               console.error(
-                `Error getting health for subgraph ${subgraphUrl}: `,
+                `Error getting health for subgraph ${getSubgraphName(subgraphUrl)}: `,
                 err,
               )
             }
