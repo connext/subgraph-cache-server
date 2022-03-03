@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { getCrosschainHealth } from './cronHandler'
+import { getCrosschainHealth, handleCronJob } from './cronHandler'
 import { Healths } from './manualDeps'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

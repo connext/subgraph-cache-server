@@ -55,6 +55,7 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
 
 export async function handleCronJob(): Promise<void> {
   const healths = await getCrosschainHealth()
+  console.log(JSON.stringify(healths));
   //@ts-ignore
   await HEALTHS.put('health', JSON.stringify(healths))
 }
