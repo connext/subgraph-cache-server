@@ -49,7 +49,6 @@ const mutateSubgraphHealth = (chain: any) => {
 }
 
 export async function handleHealthRequest(req: Request): Promise<Response> {
-  await getCrosschainHealth();
   let headers; 
 
   if (req.method === "OPTIONS"){
