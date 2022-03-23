@@ -97,6 +97,10 @@ export const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
     url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-harmonyone")
   ) {
     return "https://connext.bwarelabs.com/harmonyone/index-node/graphql";
+  } else if (
+    url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-kava-alphanet")
+  ) {
+    return "https://connext.bwarelabs.com/kava-alphanet/index-node/graphql";
   } else if (url.includes("api.thegraph.com/subgraphs/name/connext")) {
     return "https://api.thegraph.com/index-node/graphql";
   } else if (
