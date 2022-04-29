@@ -111,6 +111,10 @@ export const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
     url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-cronos")
   ) {
     return "https://connext.bwarelabs.com/cronos/index-node/graphql";
+  } else if (
+    url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-evmos")
+  ) {
+    return "https://connext.bwarelabs.com/evmos/index-node/graphql";
   } else if (url.includes("api.thegraph.com/subgraphs/name/connext")) {
     return "https://api.thegraph.com/index-node/graphql";
   } else if (
