@@ -25,7 +25,22 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
     chainData.map(async (chain: { chainId: number; subgraph: string[] }) => {
       const subgraphUrls = chain.subgraph;
       console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`);
-      if (subgraphUrls === undefined) {
+      //override for mainnet subgraph break
+      if (chain.chainId === 1) {
+        const overrideStatus: SubgraphHealth = {
+          chainHeadBlock: 1,
+          latestBlock: 1,
+          lastHealthyBlock: 1,
+          network: "mainnet",
+          fatalError: undefined,
+          health: "healthy",
+          synced: true,
+          url: `${chain.subgraph[0]}`,
+        };
+        return (healthsByChainId[chain.chainId] = JSON.stringify({
+          data: overrideStatus,
+        }));
+      } else if (subgraphUrls === undefined) {
         console.log(`no configured subgraphs for this chain`);
         return (healthsByChainId[chain.chainId] = JSON.stringify({
           data: undefined,
@@ -34,6 +49,7 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
       if (subgraphUrls) {
         //statues for all urls
         const urlStatuses: SubgraphHealth[] = [];
+
         await Promise.all(
           subgraphUrls.map(async (subgraphUrl: string) => {
             try {
