@@ -129,9 +129,12 @@ export const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
     url.includes("subgraphs.connext.p2p.org/subgraphs/name/connext/nxtp-matic")
   ) {
     return "https://subgraphs.connext.p2p.org/nxtp-matic-health-check";
-  }
-  else if (url.includes("https://gateway.thegraph.com/api/3dcfe24f2879bbbb4dd88783c162ecda/subgraphs/id/DfD1tZSmDtjCGC2LeYEQbVzj9j8kNqKAQEsYL27Vg6Sw")){
-      return "https://api.thegraph.com/index-node/graphql";
+  } else if (
+    url.includes(
+      "https://gateway.thegraph.com/api/3dcfe24f2879bbbb4dd88783c162ecda/subgraphs/id/DfD1tZSmDtjCGC2LeYEQbVzj9j8kNqKAQEsYL27Vg6Sw"
+    )
+  ) {
+    return "https://api.thegraph.com/index-node/graphql";
   }
   return undefined;
 };
