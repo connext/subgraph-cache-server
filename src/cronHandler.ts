@@ -28,48 +28,53 @@ async function getCrossChainJsonAndParse(): Promise<ChainData[]> {
 export async function getCrosschainHealth(): Promise<Healths | void> {
   const healthsByChainId: Healths = {};
 
+
   const chainData = await getCrossChainJsonAndParse();
   console.log("chainData: ", JSON.stringify(chainData));
   await Promise.all(
     chainData.map(async (chain: { chainId: number; subgraph: string[] }) => {
-      const subgraphs = chain.subgraph;
-      console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphs}`);
+      const subgraphUrls = chain.subgraph;
+      console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`);
       //override for mainnet subgraph break
       console.log(`chain.subgraph`, chain.subgraph);
       let override = false;
-      if (subgraphs) {
-        for (const subg of subgraphs) {
+      if (subgraphUrls) {
+        for (const subg of subgraphUrls) {
           if (subg.includes('thegraph.com')) {
             override = true;
           }
         }
       }
       if (override) {
-        const overrideStatus: SubgraphHealth = {
-          chainHeadBlock: 1,
-          latestBlock: 1,
-          lastHealthyBlock: 1,
-          network: "mainnet",
-          fatalError: undefined,
+        const overrideStatus = {
           health: "healthy",
           synced: true,
+          fatalError: null,
+          chains: [{
+            network: "mainnet",
+            chainHeadBlock: { number: "1" },
+            latestBlock: { number: "1" },
+            lastHealthyBlock: null,
+            }],
           url: `${chain.subgraph[0]}`,
         };
         return (healthsByChainId[chain.chainId] = JSON.stringify({
-          data: overrideStatus,
+          data: {
+            indexingSatusForCurrentVersion: overrideStatus
+          },
         }));
-      } else if (subgraphs === undefined) {
+      } else if (subgraphUrls === undefined) {
         console.log(`no configured subgraphs for this chain`);
         return (healthsByChainId[chain.chainId] = JSON.stringify({
           data: undefined,
         }));
       }
-      if (subgraphs) {
+      if (subgraphUrls) {
         //statues for all urls
         const urlStatuses: SubgraphHealth[] = [];
 
         await Promise.all(
-          subgraphs.map(async (subgraphUrl: string) => {
+          subgraphUrls.map(async (subgraphUrl: string) => {
             try {
               console.log(getSubgraphName(subgraphUrl));
               const status = await getSubgraphHealth(

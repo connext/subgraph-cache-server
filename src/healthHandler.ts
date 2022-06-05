@@ -52,7 +52,7 @@ const mutateSubgraphHealth = (chain: any) => {
       fatalError: undefined,
       health: "healthy",
       synced: true,
-      url: `foobar`,
+      url: `${JSON.stringify(chain)}`,
     };
     return { ...chain, data: { ...fakeStatus } };
   }
