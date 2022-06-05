@@ -4,26 +4,39 @@ import {
   handleCronJob,
   handleHealthRequest,
   handleLivlinessRequest,
-} from './handlers'
-import { Router } from 'itty-router'
+} from "./handlers";
+import { Router } from "itty-router";
+import { handleOpts } from "./healthHandler";
 // const TEST = process.env.TEST;
-const router = Router()
+const router = Router();
 
 //subgraph health
-router.get('/subgraph_health', async (req:Request) => {
-  return await handleHealthRequest(req)
-})
+router.get("/subgraph_health", async (req: Request): Promise<Response> => {
+  const res = await handleHealthRequest(req);
+  const headers = handleOpts(req.headers);
+
+  if (!res) {
+    return new Response(`no res from handling subg health`, headers);
+  }
+  return res;
+});
 //router livliness form ec2
-router.get('/router_livliness', async (req) => {
-  return handleLivlinessRequest(req.url)
-})
+router.get("/router_livliness", async (req) => {
+  return handleLivlinessRequest(req.url);
+});
+
+router.get("/push_cron", async (req: Request): Promise<Response> => {
+  const headers = handleOpts(req.headers);
+  await handleCronJob();
+  return new Response(`Push cron`, headers);
+});
 
 //handles http
-addEventListener('fetch', (event) => {
-  event.respondWith(router.handle(event.request))
-})
+addEventListener("fetch", (event) => {
+  event.respondWith(router.handle(event.request));
+});
 
 //handles internal cron
-addEventListener('scheduled', (event) => {
-  event.waitUntil(handleCronJob())
-})
+addEventListener("scheduled", (event) => {
+  event.waitUntil(handleCronJob());
+});

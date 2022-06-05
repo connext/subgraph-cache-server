@@ -1,4 +1,9 @@
-import { SubgraphHealth, getSubgraphHealth, Healths } from "./manualDeps";
+import {
+  SubgraphHealth,
+  getSubgraphHealth,
+  Healths,
+  ChainData,
+} from "./manualDeps";
 
 export const getSubgraphName = (url: string): string => {
   if (
@@ -19,14 +24,23 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
   const chainDataRes = await fetch(
     "https://raw.githubusercontent.com/connext/chaindata/main/crossChain.json"
   );
-  const chainData: any = await chainDataRes.json();
+  const chainData: ChainData[] = await chainDataRes.json();
   console.log("chainData: ", JSON.stringify(chainData));
   await Promise.all(
     chainData.map(async (chain: { chainId: number; subgraph: string[] }) => {
       const subgraphUrls = chain.subgraph;
       console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`);
       //override for mainnet subgraph break
-      if (chain.chainId === 1) {
+      console.log(`chain.subgraph`, chain.subgraph);
+      let override = false;
+      if (subgraphUrls) {
+        for (const subg of subgraphUrls) {
+          if (subg.includes('thegraph.com')) {
+            override = true;
+          }
+        }
+      }
+      if (override) {
         const overrideStatus: SubgraphHealth = {
           chainHeadBlock: 1,
           latestBlock: 1,
@@ -82,6 +96,8 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
 export async function handleCronJob(): Promise<void> {
   const healths = await getCrosschainHealth();
   console.log(JSON.stringify(healths));
-  //@ts-ignore
-  await HEALTHS.put("health", JSON.stringify(healths));
+  if (healths) {
+    //@ts-ignore
+    await HEALTHS.put("health", JSON.stringify(healths));
+  }
 }
