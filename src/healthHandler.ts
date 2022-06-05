@@ -70,6 +70,7 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
     const chainIDHealths: Healths = {}
     //all healths across chainId by provider []
     const healths = JSON.parse(kvhealth)
+    const mutatedProviderArry = []
     //multiple chains requested, split by , ie chainId
     if (chainIds.includes(',')) {
       const chains = chainIds.split(',')
@@ -88,15 +89,28 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
           const mutatedData = mutateSubgraphHealth(provider)
           mutatedProviderArry.push(mutatedData)
         }
+        if (chainId === 1) {
+          const fakeData = {
+            chainHeadBlock: 1,
+            latestBlock: 1,
+            lastHealthyBlock: 1,
+            network: "mainnet",
+            fatalError: undefined,
+            health: "healthy",
+            synced: true,
+            url: `${chain[0]}`,
+          };
+          mutatedProviderArry.push(fakeData);
+        }
         chainIDHealths[chainId] = JSON.stringify(mutatedProviderArry)
       }
 
-      const res = new Response(JSON.stringify(chainIDHealths), headers);
+      const res = new Response(JSON.stringify(chainIDHealths), headers); 
 
       res.headers.set("Access-Control-Allow-Origin", "*");
       res.headers.set('Access-Control-Allow-Methods', 'GET,HEAD,POST,OPTIONS');
       res.headers.set('Access-Control-Max-Age', '86400');
-
+      
       return res;
 
     } else {
