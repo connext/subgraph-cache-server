@@ -77,6 +77,7 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
       for (const chain of chains) {
         const chainId = parseInt(chain)
         const chainHealths = healths[chainId]
+        console.log('chainHealths: ', chainHealths);
         const mutatedProviderArry = []
     
         if (!chainHealths) {
@@ -110,7 +111,9 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
       if (healths[chainId] === undefined) {
         return new Response(`No subgraph for ${chainId}`, headers)
       }
+      console.log('healths[chainId]: ', healths[chainId]);
       const chainHealths = JSON.parse(healths[chainId])
+      console.log('chainHealths: ', chainHealths);
 
       for (const provider of chainHealths) {
         // console.log(typeof(providers));
