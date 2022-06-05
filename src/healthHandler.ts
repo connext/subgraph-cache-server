@@ -78,7 +78,7 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
       for (const chain of chains) {
         const chainId = parseInt(chain)
        
-        const chainHealths = healths[chainId]
+        const [chainHealths] = healths[chainId]
 
         if (!chainHealths) {
           return new Response(`No subgraph for ${chainId}`, headers)
