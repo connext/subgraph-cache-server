@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-types */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
-import { getCrosschainHealth, handleCronJob } from "./cronHandler";
-import { Healths } from "./manualDeps";
+import { ChainData, Healths } from "./manualDeps";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET,HEAD,POST,OPTIONS",
@@ -44,8 +43,7 @@ const mutateSubgraphHealth = (chain: any) => {
       syncedBlock: Number(needsMutation.latestBlock.number),
     };
     return { ...chain, data: { ...mutatedStatus } };
-  }
-  else {
+  } else {
     const fakeStatus = {
       chainHeadBlock: 1,
       latestBlock: 1,
@@ -56,9 +54,8 @@ const mutateSubgraphHealth = (chain: any) => {
       synced: true,
       url: `foobar`,
     };
-    return { ...chain, data: { ...fakeStatus } }
+    return { ...chain, data: { ...fakeStatus } };
   }
-
 };
 
 export async function handleHealthRequest(req: Request): Promise<Response> {
@@ -74,6 +71,8 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
     Error("couldnt fetch from kv store");
     return new Response(`couldnt fetch kv`, headers);
   }
+  const healths = JSON.parse(kvhealth);
+
   //parse out the query params
   const url = new URL(req.url);
   const queryString = url.search.slice(1).split("?");
@@ -82,9 +81,11 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
     //length of "chainId="
     const chainIds = decodeURIComponent(queryString.toString().substring(8));
     const chainIDHealths: Healths = {};
+
+    const mutatedProviderArry = [];
+
     //all healths across chainId by provider []
-    const healths = JSON.parse(kvhealth);
-    console.log(healths)
+    console.log(healths);
     //multiple chains requested, split by , ie chainId
     if (chainIds.includes(",")) {
       const chains = chainIds.split(",");
@@ -92,18 +93,24 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
       for (const chain of chains) {
         const chainId = parseInt(chain);
         const chainHealths = healths[chainId];
-        const mutatedProviderArry = [];
 
         if (!chainHealths) {
           return new Response(`No subgraph for ${chainId}`, headers);
         }
-          const provider = JSON.parse(chainHealths)
-            // console.log(typeof(providers));
-            const mutatedData = mutateSubgraphHealth(provider);
-            mutatedProviderArry.push(mutatedData);
-          
-          chainIDHealths[chainId] = JSON.stringify(mutatedProviderArry);
-        
+        // if (chainId === 1) {
+        //   const fakeData = {
+        //     chainHeadBlock: 1,
+        //     latestBlock: 1,
+        //     lastHealthyBlock: 1,
+        //     network: "mainnet",
+        //     fatalError: undefined,
+        //     health: "healthy",
+        //     synced: true,
+        //     url: `${chain[0]}`,
+        //   };
+        //   mutatedProviderArry.push(fakeData);
+        // }
+        chainIDHealths[chainId] = chainHealths;
       }
 
       const res = new Response(JSON.stringify(chainIDHealths), headers);
@@ -124,10 +131,9 @@ export async function handleHealthRequest(req: Request): Promise<Response> {
       if (healths[chainId] === undefined) {
         return new Response(`No subgraph for ${chainId}`, headers);
       }
-      const chainHealths = JSON.parse(healths[chainId]);
+      const chainHealths:ChainData[] = JSON.parse(healths[chainId]);
       if (chainHealths.length > 0) {
         for (const provider of chainHealths) {
-          // console.log(typeof(providers));
           const mutatedData = mutateSubgraphHealth(provider);
           mutatedProviderArry.push(mutatedData);
         }

@@ -17,24 +17,28 @@ export const getSubgraphName = (url: string): string => {
   const split = url.split("/");
   return split[split.length - 1];
 };
-
-export async function getCrosschainHealth(): Promise<Healths | void> {
-  const healthsByChainId: Healths = {};
-
+async function getCrossChainJsonAndParse(): Promise<ChainData[]> {
   const chainDataRes = await fetch(
     "https://raw.githubusercontent.com/connext/chaindata/main/crossChain.json"
   );
   const chainData: ChainData[] = await chainDataRes.json();
+  return chainData;
+  
+}
+export async function getCrosschainHealth(): Promise<Healths | void> {
+  const healthsByChainId: Healths = {};
+
+  const chainData = await getCrossChainJsonAndParse();
   console.log("chainData: ", JSON.stringify(chainData));
   await Promise.all(
     chainData.map(async (chain: { chainId: number; subgraph: string[] }) => {
-      const subgraphUrls = chain.subgraph;
-      console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`);
+      const subgraphs = chain.subgraph;
+      console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphs}`);
       //override for mainnet subgraph break
       console.log(`chain.subgraph`, chain.subgraph);
       let override = false;
-      if (subgraphUrls) {
-        for (const subg of subgraphUrls) {
+      if (subgraphs) {
+        for (const subg of subgraphs) {
           if (subg.includes('thegraph.com')) {
             override = true;
           }
@@ -54,18 +58,18 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
         return (healthsByChainId[chain.chainId] = JSON.stringify({
           data: overrideStatus,
         }));
-      } else if (subgraphUrls === undefined) {
+      } else if (subgraphs === undefined) {
         console.log(`no configured subgraphs for this chain`);
         return (healthsByChainId[chain.chainId] = JSON.stringify({
           data: undefined,
         }));
       }
-      if (subgraphUrls) {
+      if (subgraphs) {
         //statues for all urls
         const urlStatuses: SubgraphHealth[] = [];
 
         await Promise.all(
-          subgraphUrls.map(async (subgraphUrl: string) => {
+          subgraphs.map(async (subgraphUrl: string) => {
             try {
               console.log(getSubgraphName(subgraphUrl));
               const status = await getSubgraphHealth(
@@ -84,7 +88,7 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
                 err
               );
             }
-            healthsByChainId[chain.chainId] = JSON.stringify(urlStatuses);
+            healthsByChainId[chain.chainId] = JSON.stringify(urlStatuses[0]);
           })
         );
       }

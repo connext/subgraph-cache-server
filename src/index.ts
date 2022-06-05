@@ -27,7 +27,12 @@ router.get("/router_livliness", async (req) => {
 
 router.get("/push_cron", async (req: Request): Promise<Response> => {
   const headers = handleOpts(req.headers);
-  await handleCronJob();
+  try {
+    await handleCronJob();
+  } catch (e) {
+    console.log(e);
+    return new Response(`Push cron error`, headers);
+  }
   return new Response(`Push cron`, headers);
 });
 
