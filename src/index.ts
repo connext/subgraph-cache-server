@@ -16,7 +16,7 @@ router.get("/subgraph_health", async (req: Request): Promise<Response> => {
   const headers = handleOpts(req.headers);
 
   if (!res) {
-    return new Response(`no res from handling subg health`, headers);
+    return new Response(`no res from handling subg health`, { headers: headers });
   }
   return res;
 });
@@ -31,9 +31,9 @@ router.get("/push_cron", async (req: Request): Promise<Response> => {
     await handleCronJob();
   } catch (e) {
     console.log(e);
-    return new Response(`Push cron error`, headers);
+    return new Response(`Push cron error`, { headers: headers });
   }
-  return new Response(`Push cron`, headers);
+  return new Response(`Push cron`, { headers: headers });
 });
 
 //handles http

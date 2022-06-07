@@ -6,7 +6,7 @@ compatibility_date = "2022-01-05"
 account_id = "dc83b53169c2c64bdaa6f1bdef134d7e" 
 
 kv_namespaces = [ 
-	 { id="0c72f902b1194bffbcca7e3577dacfdd", binding = "HEALTHS", preview_id = "0c72f902b1194bffbcca7e3577dacfdd" },
+	 { id="0c72f902b1194bffbcca7e3577dacfdd", binding = "HEALTHS", preview_id = "9c2779e6647641bb9574ac6118b44379" },
 
 ]
 webpack_config = "webpack.config.js"

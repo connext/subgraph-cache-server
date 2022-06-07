@@ -23,16 +23,13 @@ async function getCrossChainJsonAndParse(): Promise<ChainData[]> {
   );
   const chainData: ChainData[] = await chainDataRes.json();
   return chainData;
-  
 }
 export async function getCrosschainHealth(): Promise<Healths | void> {
   const healthsByChainId: Healths = {};
-
-
   const chainData = await getCrossChainJsonAndParse();
-  console.log("chainData: ", JSON.stringify(chainData));
+
   await Promise.all(
-    chainData.map(async (chain: { chainId: number; subgraph: string[] }) => {
+    chainData.map(async (chain: ChainData) => {
       const subgraphUrls = chain.subgraph;
       console.log(`ChainID: ${chain.chainId}: SubgraphURL ${subgraphUrls}`);
       //override for mainnet subgraph break
@@ -40,7 +37,7 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
       let override = false;
       if (subgraphUrls) {
         for (const subg of subgraphUrls) {
-          if (subg.includes('thegraph.com')) {
+          if (subg.includes("thegraph.com")) {
             override = true;
           }
         }
@@ -50,17 +47,19 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
           health: "healthy",
           synced: true,
           fatalError: null,
-          chains: [{
-            network: "mainnet",
-            chainHeadBlock: { number: "1" },
-            latestBlock: { number: "1" },
-            lastHealthyBlock: null,
-            }],
+          chains: [
+            {
+              network: "mainnet",
+              chainHeadBlock: { number: "1" },
+              latestBlock: { number: "1" },
+              lastHealthyBlock: null,
+            },
+          ],
           url: `${chain.subgraph[0]}`,
         };
         return (healthsByChainId[chain.chainId] = JSON.stringify({
           data: {
-            indexingSatusForCurrentVersion: overrideStatus
+            overrideStatus,
           },
         }));
       } else if (subgraphUrls === undefined) {
@@ -93,7 +92,9 @@ export async function getCrosschainHealth(): Promise<Healths | void> {
                 err
               );
             }
-            healthsByChainId[chain.chainId] = JSON.stringify(urlStatuses[0]);
+            //delete
+            console.log("HEALTHSTATUSES", JSON.stringify(urlStatuses[0]));
+            healthsByChainId[chain.chainId] = JSON.stringify([urlStatuses[0]]);
           })
         );
       }
