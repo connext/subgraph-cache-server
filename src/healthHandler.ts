@@ -60,10 +60,13 @@ export async function handleHealthRequest(
   //parse out the query params
   const url = new URL(req.url);
   const queryString = url.search.slice(1).split("?");
+  const queryParam = "chainId=";
+  if (queryString && queryString.toString().includes(queryParam)) {
+    //length of "chainId=" is 8
+    const chainIds = decodeURIComponent(
+      queryString.toString().substring(queryParam.length)
+    );
 
-  if (queryString && queryString.toString().includes("chainId=")) {
-    //length of "chainId="
-    const chainIds = decodeURIComponent(queryString.toString().substring(8));
     const chainIDHealths: Healths = {};
 
     //all healths across chainId by provider []
@@ -73,6 +76,9 @@ export async function handleHealthRequest(
       //get corresponding chains
       for (const chain of chains) {
         const chainId = parseInt(chain);
+        if (!chainId) {
+          return apiResponseHandler(HealthEndpointErrors.MalformedChainId, headers);
+        }
         const mutatedProviderArry = [];
 
         if (healths[chainId] === undefined) {
