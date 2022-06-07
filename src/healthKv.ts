@@ -1,4 +1,4 @@
-const enableFakeStatusOnError = true;
+const enableFakeStatusOnError = false;
 
 export const mutateSubgraphHealth = (chain: any) => {
   //if chain.data.indexingStatusForCurrentVersion we're getting active health
@@ -22,7 +22,11 @@ export const mutateSubgraphHealth = (chain: any) => {
       syncedBlock: 1,
       fatalError: undefined,
     };
-    return { ...chain, data: { ...fakeStatus }, url: `${chain.data.overrideStatus?.url}` };
+    return {
+      ...chain,
+      data: { ...fakeStatus },
+      url: `${chain.data.overrideStatus?.url}`,
+    };
   }
 };
 

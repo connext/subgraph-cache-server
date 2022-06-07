@@ -77,7 +77,10 @@ export async function handleHealthRequest(
       for (const chain of chains) {
         const chainId = parseInt(chain);
         if (!chainId) {
-          return apiResponseHandler(HealthEndpointErrors.MalformedChainId, headers);
+          return apiResponseHandler(
+            HealthEndpointErrors.MalformedChainId,
+            headers
+          );
         }
         const mutatedProviderArry = [];
 
