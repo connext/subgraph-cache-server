@@ -6,7 +6,7 @@ import {
   handleLivlinessRequest,
 } from "./handlers";
 import { Router } from "itty-router";
-import { handleOpts } from "./healthHandler";
+import { handleOpts } from "./apiResponse";
 // const TEST = process.env.TEST;
 const router = Router();
 
