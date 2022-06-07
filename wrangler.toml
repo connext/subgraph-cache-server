@@ -1,4 +1,4 @@
-name = "subgraph-ts-worker-staging"
+name = "subgraph-ts-worker"
 type = "javascript"
 zone_id = ""
 workers_dev = true
