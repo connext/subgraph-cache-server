@@ -72,6 +72,12 @@ export const GET_SUBGRAPH_HEALTH_URL = (url: string): string | undefined => {
   ) {
     return "https://connext.bwarelabs.com/avalanche/index-node/graphql";
   } else if (
+    url.includes(
+      "connext.bwarelabs.com/subgraphs/name/connext/nxtp-arbitrum-nova"
+    )
+  ) {
+    return "https://connext.bwarelabs.com/arbitrum-nova/index-node/graphql";
+  } else if (
     url.includes("connext.bwarelabs.com/subgraphs/name/connext/nxtp-arbitrum")
   ) {
     return "https://connext.bwarelabs.com/arbitrum/index-node/graphql";
